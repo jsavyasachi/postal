@@ -1,3 +1,10 @@
+3.0.0
+* Migrate from Jakarta Mail 1.6.x (com.sun.mail/jakarta.mail, javax.* namespace)
+  to Jakarta Mail 2.x via org.eclipse.angus/angus-mail. All imports move from
+  javax.mail.*/javax.activation.* to jakarta.*. BREAKING: code reaching into
+  javax.mail.* through postal must switch to jakarta.mail.*. Closes #114, #107;
+  supersedes #116 (CVE).
+
 2.0.4
 * Jakarta Mail 1.6.5
 

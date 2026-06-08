@@ -7,7 +7,7 @@
             :comments "Use at your own risk"}
   :deploy-repositories [["releases" :clojars]]
   :dependencies [[commons-codec "1.9"]
-                 [com.sun.mail/jakarta.mail "1.6.5"]]
+                 [org.eclipse.angus/angus-mail "2.0.5"]]
   :global-vars {*warn-on-reflection* true}
   :profiles {:dev {:dependencies []}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
