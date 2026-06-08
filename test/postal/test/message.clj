@@ -23,7 +23,7 @@
 
 (ns postal.test.message
   (:use [postal.message]
-        [clojure.test :only [run-tests deftest is]]
+        [clojure.test :only [run-tests deftest is testing]]
         [clojure.java.io :as io]
         [postal.date :only [make-date]])
   (:import [java.util Properties UUID]
@@ -31,6 +31,18 @@
            [javax.mail.internet MimeMessage InternetAddress
             AddressException]
            [java.util.zip ZipOutputStream ZipEntry]))
+
+(deftest test-header-injection
+  (testing "CR/LF in header-bound fields is rejected (CWE-93)"
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (message->str {:from "a@b.dom" :to "c@d.dom"
+                                :subject "Test\r\nBcc: evil@x.dom" :body "x"})))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (message->str {:from "a@b.dom" :to "c@d.dom" :subject "Test"
+                                :X-Evil "ok\r\nBcc: evil@x.dom" :body "x"})))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (message->str {:from "a@b.dom" :to "c@d.dom" :subject "Test"
+                                :user-agent "p/1.0\r\nBcc: evil@x.dom" :body "x"})))))
 
 (deftest test-simple
   (let [m (message->str

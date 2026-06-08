@@ -35,6 +35,17 @@
 
 (def default-charset "utf-8")
 
+(defn- ^String no-crlf
+  "Reject a CR or LF in a value bound to a mail header. Such characters let an
+  attacker inject additional headers (CWE-93). Returns the value unchanged when
+  safe (or not a string)."
+  [s what]
+  (when (and (string? s) (re-find #"[\r\n]" s))
+    (throw (ex-info (str "postal: refusing to build message; " what
+                         " contains a CR/LF (possible header injection)")
+                    {:field what})))
+  s)
+
 (declare make-jmessage)
 
 (defn recipients [msg]
@@ -161,7 +172,8 @@
 
 (defn add-extra! [^javax.mail.Message jmsg msgrest]
   (doseq [[n v] msgrest]
-    (.addHeader jmsg (if (keyword? n) (name n) n) v))
+    (let [hname (if (keyword? n) (name n) n)]
+      (.addHeader jmsg (no-crlf hname "header name") (no-crlf v "header value"))))
   jmsg)
 
 (defn add-body! [^javax.mail.Message jmsg body charset]
@@ -206,9 +218,9 @@
          (.setFrom from-address))
        (.setReplyTo (when-let [reply-to (:reply-to msg)]
                       (make-addresses reply-to charset)))
-       (.setSubject (:subject msg) ^String charset)
+       (.setSubject (no-crlf (:subject msg) "subject") ^String charset)
        (.setSentDate (or (:date msg) (make-date)))
-       (.addHeader "User-Agent" (:user-agent msg (user-agent)))
+       (.addHeader "User-Agent" (no-crlf (:user-agent msg (user-agent)) "user-agent"))
        (add-extra! (apply dissoc msg standard))
        (add-body! (:body msg) charset)
        (.saveChanges)))))
