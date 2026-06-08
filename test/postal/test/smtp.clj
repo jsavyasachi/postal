@@ -23,7 +23,9 @@
 
 (ns postal.test.smtp
   (:use [clojure.test])
-  (:require [postal.smtp :as smtp] :reload))
+  (:require [postal.smtp :as smtp] :reload)
+  (:import [jakarta.mail Session Transport]
+           [java.util Properties]))
 
 (defn props [attrs]
   (let [msg {:from "foo@bar.dom"
@@ -35,6 +37,11 @@
 
 (defmacro is-props [input want]
   `(is (= (props ~input) ~want)))
+
+(deftest test-transport-providers-resolve
+  (let [session (Session/getInstance (Properties.))]
+    (is (instance? Transport (.getTransport session "smtp")))
+    (is (instance? Transport (.getTransport session "smtps")))))
 
 (deftest t-props
   (is-props {:host "smtp.bar.dom"}
